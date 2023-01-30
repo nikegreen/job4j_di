@@ -1,5 +1,5 @@
 # Проект job4j_di
-## DI - dependency injection  "внедрение зависимостей"
+## DI - dependency injection  "внедрение зависимостей" и Spring
 
 ### Идея DI.
 
@@ -85,7 +85,7 @@ public static void main(String[] args) {
 ``` java
 import org.springframework.stereotype.Component;
 ```
-У меня загружались классы: Store.class, ConsoleInput.class, StartUI.class.
+У меня загружались классы: Store, ConsoleInput, StartUI.
 Пример как нужно добавить пометить класс Store.class (файл Store.java)
 ``` java
 package ru.job4j.di;
@@ -118,3 +118,58 @@ context.register(StartUI.class);
 ``` java
 context.scan("ru.job4j.di");
 ```
+
+
+Spring по умолчанию загружает бины в режиме синглтон, то есть один объект на виртуальную машину.
+В bean можно прописать режим создания объекта с помощью '@Scope()'.
+Для подключения аннотации @Scope() нужно импортировать:
+``` java
+import org.springframework.context.annotation.Scope;
+```
+Spring поддерживаем 6 режимов.
+1. singleton - объект создает один раз на всю виртуальную машину.
+
+2. prototype - каждый раз создается новый объект.
+
+3. session - объект существует, пока существует сессия пользователя.
+
+4. request - объект существует, пока существует запрос.
+
+5. application - объект существует, пока существует ServletContext.
+
+6. websocket - объект существует, пока есть активная сессия для web-сокета.
+
+Например, если прописать @Scope("prototype") у классов Store, ConsoleInput, StartUI, то
+слудущий код (файл SpringDI.java):<br>
+``` java
+package ru.job4j.di;
+
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+public class SpringDI {
+    public static void main(String[] args) {
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+        context.scan("ru.job4j.di");
+        context.refresh();
+        StartUI ui = context.getBean(StartUI.class);
+        ui.add("Petr Arsentev");
+        ui.add("Ivan ivanov");
+        ui.print();
+        System.out.println("---- ui2 ----");
+        StartUI ui2 = context.getBean(StartUI.class);
+        ui2.add("Ivan ivanov");
+        ui2.print();
+    }
+}
+```
+Программа выведет:
+``` text
+"C:\Program Files\Java\jdk-19\bin\java.exe" "-javaagent:C:\Program Files\JetBrains\IntelliJ IDEA Community Edition 2022.2.4\lib\idea_rt.jar=5066:C:\Program Files\JetBrains\IntelliJ IDEA Community Edition 2022.2.4\bin" -Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8 -classpath C:\projects\job4j_di\target\classes;C:\Users\nikez\.m2\repository\org\springframework\spring-core\5.3.3\spring-core-5.3.3.jar;C:\Users\nikez\.m2\repository\org\springframework\spring-jcl\5.3.3\spring-jcl-5.3.3.jar;C:\Users\nikez\.m2\repository\org\springframework\spring-beans\5.3.3\spring-beans-5.3.3.jar;C:\Users\nikez\.m2\repository\org\springframework\spring-context\5.3.3\spring-context-5.3.3.jar;C:\Users\nikez\.m2\repository\org\springframework\spring-aop\5.3.3\spring-aop-5.3.3.jar;C:\Users\nikez\.m2\repository\org\springframework\spring-expression\5.3.3\spring-expression-5.3.3.jar ru.job4j.di.SpringDI
+Petr Arsentev
+Ivan ivanov
+---- ui2 ----
+Ivan ivanov
+
+Process finished with exit code 0
+```
+На консоли для ui2 не будет выведен текст 'Petr Arsentev', потому что объект Store будет вызван всегда новый и мыдобавили только 'Ivan ivanov'.
